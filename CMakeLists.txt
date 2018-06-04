@@ -13,5 +13,7 @@ SET(USE_SRE_EXAMPLES OFF CACHE BOOL "Disable examples for SRE" FORCE)
 add_subdirectory(SimpleRenderEngine)
 include_directories(${SRE_INCLUDE})
 
-add_executable(SimpleRenderEngineTemplate main.cpp)
+file(GLOB SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/sre/*.hpp")
+
+add_executable(SimpleRenderEngineTemplate ${SOURCE_FILES})
 target_link_libraries(SimpleRenderEngineTemplate ${SRE_LIBRARIES})
