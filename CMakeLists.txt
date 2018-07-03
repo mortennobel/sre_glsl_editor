@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-project(SimpleRenderEngineTemplate CXX)
+project(GLSL_EDITOR CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -12,8 +12,14 @@ set (CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/SimpleRenderEng
 SET(USE_SRE_EXAMPLES OFF CACHE BOOL "Disable examples for SRE" FORCE)
 add_subdirectory(SimpleRenderEngine)
 include_directories(${SRE_INCLUDE})
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/submodules/imguiDock/")
 
-file(GLOB SOURCE_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/sre/*.hpp")
+file(GLOB SOURCE_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/submodules/imguiDock/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/submodules/imguiDock/*.h"
+        )
 
-add_executable(SimpleRenderEngineTemplate ${SOURCE_FILES})
-target_link_libraries(SimpleRenderEngineTemplate ${SRE_LIBRARIES})
+add_executable(SRE_GLSL_EDITOR ${SOURCE_FILES})
+target_link_libraries(SRE_GLSL_EDITOR ${SRE_LIBRARIES})

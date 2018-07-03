@@ -2,38 +2,106 @@
 // Created by Morten Nobel-Jørgensen on 6/5/18.
 //
 
-#include <sre/impl/TextEditor.h>
-#include <sre/Resource.hpp>
 #include "GLSLEditor.hpp"
+#include <sre/Resource.hpp>
+#include <sre/imgui_sre.hpp>
+#include "imgui_dock.h"
+#include "../submodules/imguiDock/imgui_dock.h"
 
 using namespace sre;
 
 GLSLEditor::GLSLEditor() {
     SDLRenderer r;
+    r.setWindowTitle("GLSL Editor");
     r.init();
+    r.frameUpdate = [&](float deltaTime){
+        update(deltaTime);
+    };
     r.frameRender = [&](){
         render();
+    };
+    r.keyEvent = [&](SDL_Event& key){
+        onKey(key);
     };
     init();
     r.startEventLoop();
 }
 
 void GLSLEditor::render() {
-    auto rp = RenderPass::create()
+    auto rp =  RenderPass::create()
             .withCamera(camera)
+            .withFramebuffer(framebufferObject)
             .withWorldLights(&worldLights)
-            .withClearColor(true,{1,0,0,1})
+            .withClearColor(true,{0,0,0,1})
+            .withGUI(false)
             .build();
 
     rp.draw(mesh, pos1, material);
 
-    rp.draw(mesh, pos2, material);
+    rp.finish();
+
+    auto rp2 = RenderPass::create()
+            .withCamera(camera)
+            .withWorldLights(&worldLights)
+            .withClearColor(true,{.98f,.98f,.98f,1})
+            .build();
 
     gui();
 }
 
 void GLSLEditor::gui(){
-    editShader(shader.get());
+    auto size = Renderer::instance->getWindowSize();
+    ImGui::SetNextWindowPos(ImVec2(.0f, .0f), ImGuiSetCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(size.x+2, size.y+2), ImGuiSetCond_Always);
+    bool open = true;
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+    ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
+    if(ImGui::Begin("Dock Demo", &open, ImGuiWindowFlags_NoResize |
+                                          ImGuiWindowFlags_NoMove |
+                                          ImGuiWindowFlags_NoCollapse|
+                                          ImGuiWindowFlags_NoTitleBar
+                                          ))
+    {
+
+
+        // dock layout by hard-coded or .ini file
+        ImGui::BeginDockspace();
+
+        if(ImGui::BeginDock("GLSL Editor")){
+            editShader(shader.get());
+        }
+        ImGui::EndDock();
+        ImGui::SetNextDock( "GLSL Editor", ImGuiDockSlot::ImGuiDockSlot_None);
+
+
+        if(ImGui::BeginDock("Errors / Warnings")){
+            showErrors();
+        }
+        ImGui::EndDock();
+        ImGui::SetNextDock( "Errors / Warnings", ImGuiDockSlot::ImGuiDockSlot_Bottom );
+
+        if(ImGui::BeginDock("Scene")){
+            ImVec2 size = ImGui::GetContentRegionAvail();
+            if (size.x != sceneTexture->getWidth() || size.y != sceneTexture->getHeight()){
+                rebuildFBO(size.x, size.y);
+            }
+            ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y});
+        }
+        ImGui::EndDock();
+        ImGui::EndDockspace();
+    }
+    ImGui::End();
+    ImGui::PopStyleVar();
+}
+
+void GLSLEditor::rebuildFBO(int width, int height){
+
+    sceneTexture = Texture::create()
+            .withRGBAData(nullptr, width, height)
+            .withFilterSampling(false)
+            .withGenerateMipmaps(false).build();
+
+    framebufferObject = sre::Framebuffer::create().withColorTexture(sceneTexture).build();
 }
 
 void GLSLEditor::init() {
@@ -56,6 +124,11 @@ void GLSLEditor::init() {
     material = shader->createMaterial();
     material->setColor({1,1,1,1});
     material->setSpecularity(Color(1,1,1,50));
+
+    rebuildFBO(200, 100);
+
+    ImGui::StyleColorsLight();
+    ImGui::InitDock();
 }
 
 void updateErrorMarkers(std::vector<std::string>& errors, TextEditor& textEditor, ShaderType type){
@@ -86,15 +159,17 @@ void updateErrorMarkers(std::vector<std::string>& errors, TextEditor& textEditor
 }
 
 
+void GLSLEditor::showErrors(){
+    // Show error messages
+    for (int i=0;i<errors.size();i++){
+        std::string id = std::string("##_errors_")+std::to_string(i);
+        ImGui::LabelText(id.c_str(), errors[i].c_str());
+    }
+
+}
+
 void GLSLEditor::editShader(Shader* shader){
-    static Shader* shaderRef = nullptr;
-    static std::vector<std::string> shaderCode;
-    static std::vector<std::string> errors;
-    static std::string errorsStr;
-    static TextEditor textEditor;
-    static int selectedShader = 0;
-    static std::vector<const char*> activeShaders;
-    static std::vector<ShaderType> shaderTypes;
+
 
     if (shaderRef != shader){
         shaderRef = shader;
@@ -138,9 +213,6 @@ void GLSLEditor::editShader(Shader* shader){
         textEditor.SetErrorMarkers(TextEditor::ErrorMarkers());
 
     }
-    bool open = true;
-    ImGui::PushID(shader);
-    ImGui::Begin(shader->getName().c_str(),&open);
 
     ImGui::PushItemWidth(-1); // align to right
     int lastSelectedShader = selectedShader;
@@ -158,6 +230,11 @@ void GLSLEditor::editShader(Shader* shader){
     }
     selectedShader = std::min(selectedShader, (int)activeShaders.size());
 
+    if (updatedShader) {
+        auto updatedText = textEditor.GetText(); // get text before updating the editor
+        shaderCode[lastSelectedShader] = textEditor.GetText(); // get text before updating the editor
+    }
+
     //bool updatedPrecompile = ImGui::Checkbox("Show precompiled", &showPrecompiled); ImGui::SameLine();
     //if (updatedPrecompile){
     //    textEditor.SetPalette(showPrecompiled? TextEditor::GetLightPalette():TextEditor::GetDarkPalette());
@@ -169,27 +246,9 @@ void GLSLEditor::editShader(Shader* shader){
     if (io.KeyCtrl && ImGui::IsKeyPressed(SDLK_s)){
         compile = true;
     }
-    // update if compile or shader type changed or showPrecompiled is selected
-    if ((compile) || (updatedShader)){
-        auto updatedText = textEditor.GetText(); // get text before updating the editor
-        shaderCode[lastSelectedShader] = textEditor.GetText(); // get text before updating the editor
-    }
 
-    if (compile){
-        auto builder = shader->update();
-        for (int i=0;i<shaderTypes.size();i++){
-            auto filename = shaderSources[shaderTypes[i]];
-            Resource::set(filename, shaderCode[i]);
-            builder.withSourceResource(filename, shaderTypes[i]);
-        }
-        errors.clear();
-        builder.build(errors);
-        errorsStr = "";
-
-        for (auto& err:errors) {
-            errorsStr+=err+"\n";
-        }
-        updateErrorMarkers(errors,textEditor,shaderTypes[selectedShader]);
+    if (compile || updatedShader){
+        this->compile();
     }
 
     if (updatedShader){
@@ -197,19 +256,37 @@ void GLSLEditor::editShader(Shader* shader){
         textEditor.SetReadOnly(false);
         updateErrorMarkers(errors,textEditor,shaderTypes[selectedShader]);
     }
-    // Show error messages
-    if (!errorsStr.empty()){
-        if (ImGui::CollapsingHeader("Warnings / Errors")){
-            for (int i=0;i<errors.size();i++){
-                std::string id = std::string("##_errors_")+std::to_string(i);
-                ImGui::LabelText(id.c_str(), errors[i].c_str());
-            }
-        }
-    }
     textEditor.Render("##editor");
-
-    ImGui::End();
-    ImGui::PopID();
 }
 
+void GLSLEditor::onKey(SDL_Event& key){
+    lastKeypress = timeSinceStartup;
+}
 
+void GLSLEditor::update(float deltaTime){
+    timeSinceStartup += deltaTime;
+    if (lastKeypress && timeSinceStartup - lastKeypress > 0.2f){
+        compile();
+        lastKeypress = 0;
+    }
+}
+
+void GLSLEditor::compile(){
+    auto updatedText = textEditor.GetText(); // get text before updating the editor
+    shaderCode[selectedShader] = textEditor.GetText(); // get text before updating the editor
+
+    auto builder = shader->update();
+    for (int i=0;i<shaderTypes.size();i++){
+        auto filename = shaderSources[shaderTypes[i]];
+        Resource::set(filename, shaderCode[i]);
+        builder.withSourceResource(filename, shaderTypes[i]);
+    }
+    errors.clear();
+    builder.build(errors);
+    errorsStr = "";
+
+    for (auto& err:errors) {
+        errorsStr+=err+"\n";
+    }
+    updateErrorMarkers(errors,textEditor,shaderTypes[selectedShader]);
+}

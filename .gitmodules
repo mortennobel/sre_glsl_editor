@@ -1,3 +1,6 @@
 [submodule "SimpleRenderEngine"]
 	path = SimpleRenderEngine
 	url = https://github.com/mortennobel/SimpleRenderEngine.git
+[submodule "submodules/imguiDock"]
+	path = submodules/imguiDock
+	url = https://github.com/pplux/imguiDock.git
