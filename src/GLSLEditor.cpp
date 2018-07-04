@@ -5,8 +5,8 @@
 #include "GLSLEditor.hpp"
 #include <sre/Resource.hpp>
 #include <sre/imgui_sre.hpp>
+#include <sre/ModelImporter.hpp>
 #include "imgui_dock.h"
-#include "../submodules/imguiDock/imgui_dock.h"
 
 using namespace sre;
 
@@ -88,7 +88,7 @@ void GLSLEditor::gui(){
             if (size.x != sceneTexture->getWidth() || size.y != sceneTexture->getHeight()){
                 rebuildFBO(size.x, size.y);
             }
-            ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y});
+            ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y}, {0,1}, {1,0});
         }
         ImGui::EndDock();
         if(ImGui::BeginDock("Settings")){
@@ -125,12 +125,8 @@ void GLSLEditor::init() {
         Mesh::create()
                 .withQuad()
                 .build(),
-        Mesh::create()  // teapot
-                .withQuad()
-                .build(),
-        Mesh::create()  // head
-                .withQuad()
-                .build()
+        sre::ModelImporter::importObj("resources", "utah-teapot.obj")
+
     };
 
 

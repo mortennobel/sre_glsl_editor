@@ -21,7 +21,6 @@ void SettingsComponent::init() {
              Texture::create().withFile("resources/cube.png").withGenerateMipmaps(true).build(),
              Texture::create().withFile("resources/plane.png").withGenerateMipmaps(true).build(),
              Texture::create().withFile("resources/teapot.png").withGenerateMipmaps(true).build(),
-             Texture::create().withFile("resources/head.png").withGenerateMipmaps(true).build(),
     };
 }
 
