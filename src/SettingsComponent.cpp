@@ -21,6 +21,7 @@ void SettingsComponent::init() {
              Texture::create().withFile("resources/cube.png").withGenerateMipmaps(true).build(),
              Texture::create().withFile("resources/plane.png").withGenerateMipmaps(true).build(),
              Texture::create().withFile("resources/teapot.png").withGenerateMipmaps(true).build(),
+             Texture::create().withFile("resources/points.png").withGenerateMipmaps(true).build(),
     };
 }
 
@@ -46,9 +47,6 @@ void SettingsComponent::gui() {
             }
             ImGui::PopID();
         }
-
-    }
-    if (ImGui::CollapsingHeader("Camera")){
 
     }
 }

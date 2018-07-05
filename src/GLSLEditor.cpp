@@ -3,9 +3,11 @@
 //
 
 #include "GLSLEditor.hpp"
+#include <vector>
 #include <sre/Resource.hpp>
 #include <sre/imgui_sre.hpp>
 #include <sre/ModelImporter.hpp>
+#include "glm/gtc/random.hpp"
 #include "imgui_dock.h"
 
 using namespace sre;
@@ -115,6 +117,12 @@ void GLSLEditor::init() {
     camera.lookAt({0,0,3},{0,0,0},{0,1,0});
     camera.setPerspectiveProjection(60,0.1f,100);
 
+    // randomize particle positions
+    std::vector<glm::vec3> particles(1000);
+    for (auto & p : particles){
+        p = glm::linearRand(glm::vec3(-1,-1,-1), glm::vec3(1,1,1));
+    }
+
     meshes = {
         Mesh::create()
                 .withSphere()
@@ -125,8 +133,11 @@ void GLSLEditor::init() {
         Mesh::create()
                 .withQuad()
                 .build(),
-        sre::ModelImporter::importObj("resources", "utah-teapot.obj")
-
+        sre::ModelImporter::importObj("resources", "utah-teapot.obj"),
+        Mesh::create()
+                .withPositions(particles)
+                .withMeshTopology(MeshTopology::Points)
+                .build()
     };
 
 
