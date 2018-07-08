@@ -12,7 +12,6 @@ using namespace sre;
 SettingsComponent::SettingsComponent(GLSLEditor *editor)
 :editor(editor)
 {
-
 }
 
 void SettingsComponent::init() {
@@ -27,7 +26,6 @@ void SettingsComponent::init() {
 
 void SettingsComponent::gui() {
     if (ImGui::CollapsingHeader("Mesh")){
-
         int frame_padding = 2;
         for (int i=0;i<icons.size();i++) {
             auto icon = icons[i];
@@ -35,13 +33,15 @@ void SettingsComponent::gui() {
             bool selected = i == editor->settings.selectedMesh;
             if (!selected){
                 ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor(200,200,200,255));
+            } else {
+                ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor(100,100,255,255));
             }
             if (ImGui::ImageButton(icon->getNativeTexturePtr(), ImVec2(16,16), ImVec2(0,1), ImVec2(1.0f,0), frame_padding, ImColor(0,0,0,0))){
                 editor->settings.selectedMesh = i;
             }
-            if (!selected){
-                ImGui::PopStyleColor();
-            }
+
+            ImGui::PopStyleColor();
+
             if (i != icons.size() - 1){
                 ImGui::SameLine();
             }

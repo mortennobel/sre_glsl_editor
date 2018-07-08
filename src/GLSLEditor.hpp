@@ -12,6 +12,7 @@
 
 #include "EditorComponent.hpp"
 #include "SettingsComponent.hpp"
+#include "UniformComponent.hpp"
 #include "Settings.hpp"
 
 
@@ -34,12 +35,15 @@ private:
     sre::Camera camera;
     sre::WorldLights worldLights;
     std::vector<std::shared_ptr<sre::Mesh>> meshes;
+    std::vector<std::shared_ptr<sre::Texture>> textures;
+    std::vector<std::shared_ptr<sre::Texture>> cubeTextures;
     std::shared_ptr<sre::Shader> shader;
-    std::shared_ptr<sre::Material> material;
+
     std::shared_ptr<sre::Texture> sceneTexture;
     std::shared_ptr<sre::Framebuffer> framebufferObject;
     EditorComponent editorComponent;
     SettingsComponent settingsComponent;
+    UniformComponent uniformComponent;
     Settings settings;
 
     glm::mat4 pos1 = glm::translate(glm::mat4(1), {0,0,0});
@@ -50,6 +54,7 @@ private:
 
     friend class EditorComponent;
     friend class SettingsComponent;
+    friend class UniformComponent;
 };
 
 

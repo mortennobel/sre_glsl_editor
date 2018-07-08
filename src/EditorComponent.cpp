@@ -57,22 +57,26 @@ void EditorComponent::gui() {
     int lastSelectedShader = selectedShader;
     bool updatedShader = ImGui::Combo("####ShaderType", &selectedShader, activeShaders.data(),
             static_cast<int>(activeShaders.size()));
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("CTRL+1, CTRL+2, ...");
     ImGuiIO& io = ImGui::GetIO();
+    /*if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("CTRL+1, CTRL+2, ...");
+
     if (io.KeyCtrl) {
+        std::cout << "Ctrl "<< std::endl;
         for (int i=SDLK_1;i<SDLK_9;i++) {
             if (ImGui::IsKeyPressed(i)) {
                 selectedShader = i-SDLK_1;
                 updatedShader = true;
+                std::cout << "selectedShader "<<selectedShader<< std::endl;
             }
         }
-    }
+    }*/
     selectedShader = std::min(selectedShader, (int)activeShaders.size());
 
     if (updatedShader) {
         auto updatedText = textEditor.GetText(); // get text before updating the editor
-        shaderCode[lastSelectedShader] = textEditor.GetText(); // get text before updating the editor
+        shaderCode[lastSelectedShader] = updatedText; // get text before updating the editor
+        textEditor.SetText(shaderCode[selectedShader]);
     }
 
     //bool updatedPrecompile = ImGui::Checkbox("Show precompiled", &showPrecompiled); ImGui::SameLine();
@@ -92,8 +96,6 @@ void EditorComponent::gui() {
     }
 
     if (updatedShader) {
-        textEditor.SetText(shaderCode[selectedShader]);
-        textEditor.SetReadOnly(false);
         glslEditor->updateErrorMarkers(glslEditor->errors,textEditor, shaderTypes[selectedShader]);
     }
     textEditor.Render("##editor");

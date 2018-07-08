@@ -13,7 +13,7 @@
 using namespace sre;
 
 GLSLEditor::GLSLEditor()
-:editorComponent(this), settingsComponent(this)
+:editorComponent(this), settingsComponent(this), uniformComponent(this)
 {
     SDLRenderer r;
     r.setWindowTitle("GLSL Editor");
@@ -41,7 +41,7 @@ void GLSLEditor::render() {
             .withGUI(false)
             .build();
 
-    rp.draw(meshes[settings.selectedMesh], pos1, material);
+    rp.draw(meshes[settings.selectedMesh], pos1, settings.material);
 
     rp.finish();
 
@@ -93,10 +93,17 @@ void GLSLEditor::gui(){
             ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y}, {0,1}, {1,0});
         }
         ImGui::EndDock();
+
         if(ImGui::BeginDock("Settings")){
             settingsComponent.gui();
         }
         ImGui::EndDock();
+
+        if(ImGui::BeginDock("Uniforms")){
+            uniformComponent.gui();
+        }
+        ImGui::EndDock();
+
         ImGui::EndDockspace();
     }
     ImGui::End();
@@ -116,6 +123,16 @@ void GLSLEditor::rebuildFBO(int width, int height){
 void GLSLEditor::init() {
     camera.lookAt({0,0,3},{0,0,0},{0,1,0});
     camera.setPerspectiveProjection(60,0.1f,100);
+
+    textures = {
+        Texture::getWhiteTexture(),
+        Texture::create().withFile("resources/checker-uv.png").withGenerateMipmaps(true).build(),
+        Texture::create().withFile("resources/checker-pattern.png").withGenerateMipmaps(true).build(),
+    };
+
+    cubeTextures = {
+        Texture::getDefaultCubemapTexture()
+    };
 
     // randomize particle positions
     std::vector<glm::vec3> particles(1000);
@@ -150,9 +167,9 @@ void GLSLEditor::init() {
     editorComponent.shaderSources[ShaderType::Fragment] ="standard_blinn_phong_frag.glsl";
 
     shader = Shader::getStandardBlinnPhong();
-    material = shader->createMaterial();
-    material->setColor({1,1,1,1});
-    material->setSpecularity(Color(1,1,1,50));
+    settings.material = shader->createMaterial();
+    settings.material->setColor({1,1,1,1});
+    settings.material->setSpecularity(Color(1,1,1,50));
 
     rebuildFBO(200, 100);
 
@@ -194,7 +211,6 @@ void GLSLEditor::showErrors(){
         std::string id = std::string("##_errors_")+std::to_string(i);
         ImGui::LabelText(id.c_str(), errors[i].c_str());
     }
-
 }
 
 void GLSLEditor::onKey(SDL_Event& key){
