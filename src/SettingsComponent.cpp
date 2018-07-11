@@ -83,5 +83,8 @@ void SettingsComponent::gui() {
             }
             ImGui::PopID();
         }
+
+        ImGui::DragFloat("Rotate Y",&editor->settings.rotateCamera.y,1,-180,180);
+        ImGui::DragFloat("Rotate X",&editor->settings.rotateCamera.x,1,-89,89);
     }
 }

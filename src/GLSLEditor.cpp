@@ -9,6 +9,7 @@
 #include <sre/imgui_sre.hpp>
 #include <sre/ModelImporter.hpp>
 #include "glm/gtc/random.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #include "imgui_dock.h"
 
 using namespace sre;
@@ -138,7 +139,10 @@ void GLSLEditor::rebuildFBO(int width, int height){
 }
 
 void GLSLEditor::renderScene(){
-    camera.lookAt({0,0,3},{0,0,0},{0,1,0});
+    glm::vec3 position = {0,0,3};
+    position = glm::rotateX(position, glm::radians(settings.rotateCamera.x));
+    position = glm::rotateY(position, glm::radians(settings.rotateCamera.y));
+    camera.lookAt(position,{0,0,0},{0,1,0});
     if (settings.perspectiveCamera){
         camera.setPerspectiveProjection(60,0.1f,100);
     } else {
