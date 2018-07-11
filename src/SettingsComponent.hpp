@@ -17,7 +17,8 @@ public:
     void gui();
 private:
     GLSLEditor* editor;
-    std::vector<std::shared_ptr<sre::Texture>> icons;
+    std::vector<std::shared_ptr<sre::Texture>> meshIcons;
+    std::vector<std::shared_ptr<sre::Texture>> cameraIcons;
 };
 
 

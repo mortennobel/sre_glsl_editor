@@ -38,6 +38,7 @@ emcc -Isrc -ISimpleRenderEngine/include -ISimpleRenderEngine/submodules/imgui -I
                SimpleRenderEngine/src/sre/impl/UniformSet.cpp \
                submodules/imguiDock/imgui_dock.cpp \
                src/EditorComponent.cpp \
+               src/UniformComponent.cpp \
                src/GLSLEditor.cpp \
                src/main.cpp \
                src/SettingsComponent.cpp \

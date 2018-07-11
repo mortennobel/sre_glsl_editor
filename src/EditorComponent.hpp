@@ -6,16 +6,17 @@ class GLSLEditor;
 
 class EditorComponent {
 public:
-    explicit EditorComponent(GLSLEditor* glslEditor);
+    explicit EditorComponent(GLSLEditor* glslEditor, sre::ShaderType shaderType);
     void gui();
     void update(float deltaTime);
-    void compile();
+    void updateErrorMarkers(std::vector<std::string>& errors);
 private:
+    std::string titleInternal;
     GLSLEditor* glslEditor;
     TextEditor textEditor;
     int selectedShader = 0;
+    sre::ShaderType shaderType;
     sre::Shader* shaderRef = nullptr;
-    std::vector<std::string> shaderCode;
     std::vector<const char*> activeShaders;
     std::vector<sre::ShaderType> shaderTypes;
     std::map<sre::ShaderType, std::string> shaderSources;

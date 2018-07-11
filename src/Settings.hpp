@@ -17,6 +17,9 @@ struct UniformTypeValue {
 
 struct Settings {
     int selectedMesh = 0;
+    bool perspectiveCamera = true;
+    glm::vec4 clearColor = glm::vec4(0.0f,0.0f,0.0f,1.0f);
     std::map<std::string, UniformTypeValue> uniforms;
+    std::map<sre::ShaderType, std::string> shaderSource;
     std::shared_ptr<sre::Material> material;
 };

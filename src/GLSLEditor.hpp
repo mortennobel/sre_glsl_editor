@@ -3,6 +3,8 @@
 //
 
 #pragma once
+
+#include <string>
 #include "sre/SDLRenderer.hpp"
 #include "sre/Framebuffer.hpp"
 
@@ -19,6 +21,8 @@
 class GLSLEditor {
 public:
     GLSLEditor();
+    void compileShader();
+    void renderScene();
 private:
     void init();
     void render();
@@ -31,7 +35,6 @@ private:
     void rebuildFBO(int width, int height);
     void showErrors();
 
-    void updateErrorMarkers(std::vector<std::string>& errors, TextEditor& textEditor, sre::ShaderType type);
     sre::Camera camera;
     sre::WorldLights worldLights;
     std::vector<std::shared_ptr<sre::Mesh>> meshes;
@@ -41,7 +44,9 @@ private:
 
     std::shared_ptr<sre::Texture> sceneTexture;
     std::shared_ptr<sre::Framebuffer> framebufferObject;
-    EditorComponent editorComponent;
+    EditorComponent vertexShaderComponent;
+    EditorComponent fragmentShaderComponent;
+    EditorComponent geometryShaderComponent;
     SettingsComponent settingsComponent;
     UniformComponent uniformComponent;
     Settings settings;
@@ -49,8 +54,7 @@ private:
     glm::mat4 pos1 = glm::translate(glm::mat4(1), {0,0,0});
 
     std::vector<std::string> errors;
-
-    std::string errorsStr;
+    std::map<sre::ShaderType, std::string> filenames;
 
     friend class EditorComponent;
     friend class SettingsComponent;

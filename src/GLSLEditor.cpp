@@ -4,6 +4,7 @@
 
 #include "GLSLEditor.hpp"
 #include <vector>
+#include <sre/Color.hpp>
 #include <sre/Resource.hpp>
 #include <sre/imgui_sre.hpp>
 #include <sre/ModelImporter.hpp>
@@ -13,7 +14,11 @@
 using namespace sre;
 
 GLSLEditor::GLSLEditor()
-:editorComponent(this), settingsComponent(this), uniformComponent(this)
+        :vertexShaderComponent(this, sre::ShaderType::Vertex),
+         geometryShaderComponent(this, sre::ShaderType::Geometry),
+         fragmentShaderComponent(this, sre::ShaderType::Fragment),
+         settingsComponent(this),
+         uniformComponent(this)
 {
     SDLRenderer r;
     r.setWindowTitle("GLSL Editor");
@@ -33,17 +38,7 @@ GLSLEditor::GLSLEditor()
 }
 
 void GLSLEditor::render() {
-    auto rp =  RenderPass::create()
-            .withCamera(camera)
-            .withFramebuffer(framebufferObject)
-            .withWorldLights(&worldLights)
-            .withClearColor(true,{0,0,0,1})
-            .withGUI(false)
-            .build();
-
-    rp.draw(meshes[settings.selectedMesh], pos1, settings.material);
-
-    rp.finish();
+    renderScene();
 
     auto rp2 = RenderPass::create()
             .withCamera(camera)
@@ -62,28 +57,47 @@ void GLSLEditor::gui(){
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
     if(ImGui::Begin("Dock Demo", &open, ImGuiWindowFlags_NoResize |
-                                          ImGuiWindowFlags_NoMove |
-                                          ImGuiWindowFlags_NoCollapse|
-                                          ImGuiWindowFlags_NoTitleBar
-                                          ))
+                                        ImGuiWindowFlags_NoMove |
+                                        ImGuiWindowFlags_NoCollapse|
+                                        ImGuiWindowFlags_NoTitleBar
+    ))
     {
 
 
         // dock layout by hard-coded or .ini file
         ImGui::BeginDockspace();
 
-        if(ImGui::BeginDock("GLSL Editor")){
-            editorComponent.gui();
+        for (auto elem : filenames){
+            switch (elem.first){
+                case ShaderType::Vertex:
+                    if(ImGui::BeginDock("Vertex Shader")){
+                        vertexShaderComponent.gui();
+                    }
+                    ImGui::EndDock();
+                    ImGui::SetNextDock( "Vertex Shader", ImGuiDockSlot::ImGuiDockSlot_None );
+                    break;
+                case ShaderType::Fragment:
+                    if(ImGui::BeginDock("Fragment Shader")){
+                        fragmentShaderComponent.gui();
+                    }
+                    ImGui::EndDock();
+                    ImGui::SetNextDock( "Fragment Shader", ImGuiDockSlot::ImGuiDockSlot_None );
+                    break;
+                case ShaderType::Geometry:
+                    if(ImGui::BeginDock("Geometry Shader")){
+                        geometryShaderComponent.gui();
+                    }
+                    ImGui::EndDock();
+                    ImGui::SetNextDock( "Geometry Shader", ImGuiDockSlot::ImGuiDockSlot_None );
+                    break;
+            }
         }
-        ImGui::EndDock();
-        ImGui::SetNextDock( "GLSL Editor", ImGuiDockSlot::ImGuiDockSlot_None);
 
-
-        if(ImGui::BeginDock("Errors / Warnings")){
+        if(ImGui::BeginDock("Errors")){
             showErrors();
         }
         ImGui::EndDock();
-        ImGui::SetNextDock( "Errors / Warnings", ImGuiDockSlot::ImGuiDockSlot_Bottom );
+        ImGui::SetNextDock( "Errors", ImGuiDockSlot::ImGuiDockSlot_Bottom );
 
         if(ImGui::BeginDock("Scene")){
             ImVec2 size = ImGui::GetContentRegionAvail();
@@ -118,6 +132,32 @@ void GLSLEditor::rebuildFBO(int width, int height){
             .withGenerateMipmaps(false).build();
 
     framebufferObject = sre::Framebuffer::create().withColorTexture(sceneTexture).build();
+
+    // clear fbo
+    renderScene();
+}
+
+void GLSLEditor::renderScene(){
+    camera.lookAt({0,0,3},{0,0,0},{0,1,0});
+    if (settings.perspectiveCamera){
+        camera.setPerspectiveProjection(60,0.1f,100);
+    } else {
+        camera.setOrthographicProjection(1,0,100);
+    }
+
+
+    sre::Color color(settings.clearColor);
+    auto rp =  RenderPass::create()
+            .withCamera(camera)
+            .withFramebuffer(framebufferObject)
+            .withWorldLights(&worldLights)
+            .withClearColor(true, color)
+            .withGUI(false)
+            .build();
+
+    rp.draw(meshes[settings.selectedMesh], pos1, settings.material);
+
+    rp.finish();
 }
 
 void GLSLEditor::init() {
@@ -125,13 +165,13 @@ void GLSLEditor::init() {
     camera.setPerspectiveProjection(60,0.1f,100);
 
     textures = {
-        Texture::getWhiteTexture(),
-        Texture::create().withFile("resources/checker-uv.png").withGenerateMipmaps(true).build(),
-        Texture::create().withFile("resources/checker-pattern.png").withGenerateMipmaps(true).build(),
+            Texture::getWhiteTexture(),
+            Texture::create().withFile("resources/checker-uv.png").withGenerateMipmaps(true).build(),
+            Texture::create().withFile("resources/checker-pattern.png").withGenerateMipmaps(true).build(),
     };
 
     cubeTextures = {
-        Texture::getDefaultCubemapTexture()
+            Texture::getDefaultCubemapTexture()
     };
 
     // randomize particle positions
@@ -141,20 +181,20 @@ void GLSLEditor::init() {
     }
 
     meshes = {
-        Mesh::create()
-                .withSphere()
-                .build(),
-        Mesh::create()
-                .withCube()
-                .build(),
-        Mesh::create()
-                .withQuad()
-                .build(),
-        sre::ModelImporter::importObj("resources", "utah-teapot.obj"),
-        Mesh::create()
-                .withPositions(particles)
-                .withMeshTopology(MeshTopology::Points)
-                .build()
+            Mesh::create()
+                    .withSphere()
+                    .build(),
+            Mesh::create()
+                    .withCube()
+                    .build(),
+            Mesh::create()
+                    .withQuad()
+                    .build(),
+            sre::ModelImporter::importObj("resources", "utah-teapot.obj"),
+            Mesh::create()
+                    .withPositions(particles)
+                    .withMeshTopology(MeshTopology::Points)
+                    .build()
     };
 
 
@@ -162,9 +202,12 @@ void GLSLEditor::init() {
                                  .withDirectionalLight(glm::normalize(glm::vec3(1,1,1)))
                                  .build());
 
+    settings.shaderSource[ShaderType::Vertex] = Resource::loadText("standard_blinn_phong_vert.glsl");
+    settings.shaderSource[ShaderType::Fragment] = Resource::loadText("standard_blinn_phong_frag.glsl");
+    settings.shaderSource[ShaderType::Geometry] = "";
 
-    editorComponent.shaderSources[ShaderType::Vertex] ="standard_blinn_phong_vert.glsl";
-    editorComponent.shaderSources[ShaderType::Fragment] ="standard_blinn_phong_frag.glsl";
+    filenames[ShaderType::Vertex] = "standard_blinn_phong_vert.glsl";
+    filenames[ShaderType::Fragment] = "standard_blinn_phong_frag.glsl";
 
     shader = Shader::getStandardBlinnPhong();
     settings.material = shader->createMaterial();
@@ -177,35 +220,27 @@ void GLSLEditor::init() {
     ImGui::InitDock();
 }
 
-void GLSLEditor::updateErrorMarkers(std::vector<std::string>& errors, TextEditor& textEditor, ShaderType type){
-    TextEditor::ErrorMarkers errorMarkers;
-    std::regex e ( "\\d+:(\\d+)", std::regex::ECMAScript);
+void GLSLEditor::compileShader(){
+    auto builder = shader->update();
 
-    std::smatch m;
-
-    for (auto err : errors){
-        auto trimmedStr = err;
-        auto idx = err.find("##");
-        int filter = -1;
-        if (idx > 0){
-            trimmedStr = err.substr(0,idx);
-            auto filterStr = err.substr(idx+2);
-            filter = std::stoi(filterStr);
-        }
-        if (filter == to_id(type)){
-            int line = 0;
-            if (std::regex_search (trimmedStr,m,e)) {
-                std::string match = m[1];
-                line = std::stoi(match);
-            }
-            errorMarkers.insert(std::pair<int, std::string>(line, trimmedStr));
-        }
+    for (auto elem : filenames){
+        auto filename = elem.second;
+        Resource::set(filename, (&vertexShaderComponent)[(int)elem.first].textEditor.GetText());
+        builder.withSourceResource(filename, elem.first);
     }
-    textEditor.SetErrorMarkers(errorMarkers);
+    errors.clear();
+    builder.build(errors);
+
+    vertexShaderComponent.updateErrorMarkers(errors);
+    fragmentShaderComponent.updateErrorMarkers(errors);
+    geometryShaderComponent.updateErrorMarkers(errors);
+
 }
 
-
 void GLSLEditor::showErrors(){
+    if (errors.empty()){
+        ImGui::LabelText("", "No errors");
+    }
     // Show error messages
     for (int i=0;i<errors.size();i++){
         std::string id = std::string("##_errors_")+std::to_string(i);
@@ -220,7 +255,7 @@ void GLSLEditor::onKey(SDL_Event& key){
 void GLSLEditor::update(float deltaTime){
     timeSinceStartup += deltaTime;
     if (lastKeypress && timeSinceStartup - lastKeypress > 0.2f){
-        editorComponent.compile();
+        compileShader();
         lastKeypress = 0;
     }
 }

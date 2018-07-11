@@ -4,61 +4,27 @@
 
 using namespace sre;
 
-EditorComponent::EditorComponent(GLSLEditor *glslEditor)
-:glslEditor(glslEditor)
+EditorComponent::EditorComponent(GLSLEditor *glslEditor, sre::ShaderType shaderType)
+:glslEditor(glslEditor), shaderType(shaderType)
 {
+    titleInternal = std::string("##editor")+std::to_string((int)shaderType);
 }
 
 void EditorComponent::gui() {
     if (shaderRef != glslEditor->shader.get()){
         shaderRef = glslEditor->shader.get();
-        shaderCode.clear();
-        activeShaders.clear();
-        shaderTypes.clear();
-        for (auto source : shaderSources){
-            auto source_ = Resource::loadText(source.second);
-            shaderCode.emplace_back(source_);
-            shaderTypes.push_back(source.first);
-            switch (source.first){
-                case ShaderType::Vertex:
-                    activeShaders.push_back("Vertex");
-                    break;
-                case ShaderType::Fragment:
-                    activeShaders.push_back("Fragment");
-                    break;
-                case ShaderType::Geometry:
-                    activeShaders.push_back("Geometry");
-                    break;
-                case ShaderType::TessellationControl:
-                    activeShaders.push_back("TessellationControl");
-                    break;
-                case ShaderType::TessellationEvaluation:
-                    activeShaders.push_back("TessellationEvaluation");
-                    break;
-                case ShaderType::NumberOfShaderTypes:
-                    LOG_ERROR("ShaderType::NumberOfShaderTypes should never be used");
-                    break;
-                default:
-                    LOG_ERROR("Unhandled shader");
-                    break;
-            }
-        }
-        selectedShader = 0;
         textEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
-        textEditor.SetText(shaderCode[selectedShader]);
+        textEditor.SetText(glslEditor->settings.shaderSource[shaderType]);
         textEditor.SetPalette(TextEditor::GetDarkPalette());
-        glslEditor->errors.clear();
-        glslEditor->errorsStr = "";
-        textEditor.SetErrorMarkers(TextEditor::ErrorMarkers());
-
     }
 
     ImGui::PushItemWidth(-1); // align to right
-    int lastSelectedShader = selectedShader;
+
+    /*int lastSelectedShader = selectedShader;
     bool updatedShader = ImGui::Combo("####ShaderType", &selectedShader, activeShaders.data(),
             static_cast<int>(activeShaders.size()));
     ImGuiIO& io = ImGui::GetIO();
-    /*if (ImGui::IsItemHovered())
+    if (ImGui::IsItemHovered())
         ImGui::SetTooltip("CTRL+1, CTRL+2, ...");
 
     if (io.KeyCtrl) {
@@ -71,56 +37,58 @@ void EditorComponent::gui() {
             }
         }
     }*/
-    selectedShader = std::min(selectedShader, (int)activeShaders.size());
-
-    if (updatedShader) {
-        auto updatedText = textEditor.GetText(); // get text before updating the editor
-        shaderCode[lastSelectedShader] = updatedText; // get text before updating the editor
-        textEditor.SetText(shaderCode[selectedShader]);
-    }
 
     //bool updatedPrecompile = ImGui::Checkbox("Show precompiled", &showPrecompiled); ImGui::SameLine();
     //if (updatedPrecompile){
     //    textEditor.SetPalette(showPrecompiled? TextEditor::GetLightPalette():TextEditor::GetDarkPalette());
     //}
-    bool compile = ImGui::Button("Compile");
+    /*bool compile = ImGui::Button("Compile");
     if (ImGui::IsItemHovered())
         ImGui::SetTooltip("CTRL+S");
-
-    if (io.KeyCtrl && ImGui::IsKeyPressed(SDLK_s)) {
+*/
+    /*if (io.KeyCtrl && ImGui::IsKeyPressed(SDLK_s)) {
         compile = true;
-    }
+    }*/
 
-    if (compile || updatedShader) {
-        this->compile();
-    }
+    /*if (compile || updatedShader) {
+        glslEditor->compileShader();
+    }*/
 
-    if (updatedShader) {
-        glslEditor->updateErrorMarkers(glslEditor->errors,textEditor, shaderTypes[selectedShader]);
-    }
-    textEditor.Render("##editor");
+    //if (updatedShader) {
+    //    glslEditor->updateErrorMarkers(glslEditor->errors,textEditor, shaderTypes[selectedShader]);
+    //}
+    textEditor.Render(titleInternal.c_str());
 }
 
 void EditorComponent::update(float deltaTime) {
 
 }
 
-void EditorComponent::compile() {
-    auto updatedText = textEditor.GetText(); // get text before updating the editor
-    shaderCode[selectedShader] = textEditor.GetText(); // get text before updating the editor
+void EditorComponent::updateErrorMarkers(std::vector<std::string>& errors){
+    TextEditor::ErrorMarkers errorMarkers;
+    std::regex e ( "\\d+:(\\d+)", std::regex::ECMAScript);
 
-    auto builder = shaderRef->update();
-    for (int i=0;i<shaderTypes.size();i++){
-        auto filename = shaderSources[shaderTypes[i]];
-        Resource::set(filename, shaderCode[i]);
-        builder.withSourceResource(filename, shaderTypes[i]);
-    }
-    glslEditor->errors.clear();
-    builder.build(glslEditor->errors);
-    glslEditor->errorsStr = "";
+    std::smatch m;
 
-    for (auto& err:glslEditor->errors) {
-        glslEditor->errorsStr+=err+"\n";
+    for (auto err : errors){
+        auto trimmedStr = err;
+        auto idx = err.find("##");
+        int filter = -1;
+        if (idx > 0){
+            trimmedStr = err.substr(0,idx);
+            auto filterStr = err.substr(idx+2);
+            filter = std::stoi(filterStr);
+        }
+        if (filter == to_id(shaderType)) {
+            int line = 0;
+            if (std::regex_search (trimmedStr,m,e)) {
+                std::string match = m[1];
+                line = std::stoi(match);
+            }
+            errorMarkers.insert(std::pair<int, std::string>(line, trimmedStr));
+
+        }
+        std::cout << filter<<" "<<to_id(shaderType)<<trimmedStr<<std::endl;
     }
-    glslEditor->updateErrorMarkers(glslEditor->errors,textEditor,shaderTypes[selectedShader]);
+    textEditor.SetErrorMarkers(errorMarkers);
 }
