@@ -213,6 +213,9 @@ void GLSLEditor::init() {
     filenames[ShaderType::Vertex] = "standard_blinn_phong_vert.glsl";
     filenames[ShaderType::Fragment] = "standard_blinn_phong_frag.glsl";
 
+    vertexShaderComponent.setText(settings.shaderSource[ShaderType::Vertex]);
+    fragmentShaderComponent.setText(settings.shaderSource[ShaderType::Fragment]);
+
     shader = Shader::getStandardBlinnPhong();
     settings.material = shader->createMaterial();
     settings.material->setColor({1,1,1,1});
@@ -238,7 +241,6 @@ void GLSLEditor::compileShader(){
     vertexShaderComponent.updateErrorMarkers(errors);
     fragmentShaderComponent.updateErrorMarkers(errors);
     geometryShaderComponent.updateErrorMarkers(errors);
-
 }
 
 void GLSLEditor::showErrors(){

@@ -10,53 +10,39 @@ EditorComponent::EditorComponent(GLSLEditor *glslEditor, sre::ShaderType shaderT
     titleInternal = std::string("##editor")+std::to_string((int)shaderType);
 }
 
+void EditorComponent::setText(std::string& code){
+    textEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
+    textEditor.SetText(code);
+    static TextEditor::Palette p = { {
+                                 0xffffffff,	// None
+                                 0xffd69c56,	// Keyword
+                                 0xff00ff00,	// Number
+                                 0xff7070e0,	// String
+                                 0xff70a0e0, // Char literal
+                                 0xffffffff, // Punctuation
+                                 0xff409090,	// Preprocessor
+                                 0xffaaaaaa, // Identifier
+                                 0xff9bc64d, // Known identifier
+                                 0xffc040a0, // Preproc identifier
+                                 0xff206020, // Comment (single line)
+                                 0xff406020, // Comment (multi line)
+                                 0xff101010, // Background
+                                 0xffe0e0e0, // Cursor
+                                 0x80a06020, // Selection
+                                 0x800020ff, // ErrorMarker
+                                 0x40f08000, // Breakpoint
+                                 0xff707000, // Line number
+                                 0x40000000, // Current line fill
+                                 0x40808080, // Current line fill (inactive)
+                                 0x40a0a0a0, // Current line edge
+                                 0xff0000ff, // ErrorMarkerTitleColor
+                                 0xff000000, // ErrorMarkerBodyColor
+                         } };
+    textEditor.SetPalette(p);
+}
+
 void EditorComponent::gui() {
-    if (shaderRef != glslEditor->shader.get()){
-        shaderRef = glslEditor->shader.get();
-        textEditor.SetLanguageDefinition(TextEditor::LanguageDefinition::GLSL());
-        textEditor.SetText(glslEditor->settings.shaderSource[shaderType]);
-        textEditor.SetPalette(TextEditor::GetDarkPalette());
-    }
-
     ImGui::PushItemWidth(-1); // align to right
-
-    /*int lastSelectedShader = selectedShader;
-    bool updatedShader = ImGui::Combo("####ShaderType", &selectedShader, activeShaders.data(),
-            static_cast<int>(activeShaders.size()));
-    ImGuiIO& io = ImGui::GetIO();
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("CTRL+1, CTRL+2, ...");
-
-    if (io.KeyCtrl) {
-        std::cout << "Ctrl "<< std::endl;
-        for (int i=SDLK_1;i<SDLK_9;i++) {
-            if (ImGui::IsKeyPressed(i)) {
-                selectedShader = i-SDLK_1;
-                updatedShader = true;
-                std::cout << "selectedShader "<<selectedShader<< std::endl;
-            }
-        }
-    }*/
-
-    //bool updatedPrecompile = ImGui::Checkbox("Show precompiled", &showPrecompiled); ImGui::SameLine();
-    //if (updatedPrecompile){
-    //    textEditor.SetPalette(showPrecompiled? TextEditor::GetLightPalette():TextEditor::GetDarkPalette());
-    //}
-    /*bool compile = ImGui::Button("Compile");
-    if (ImGui::IsItemHovered())
-        ImGui::SetTooltip("CTRL+S");
-*/
-    /*if (io.KeyCtrl && ImGui::IsKeyPressed(SDLK_s)) {
-        compile = true;
-    }*/
-
-    /*if (compile || updatedShader) {
-        glslEditor->compileShader();
-    }*/
-
-    //if (updatedShader) {
-    //    glslEditor->updateErrorMarkers(glslEditor->errors,textEditor, shaderTypes[selectedShader]);
-    //}
     textEditor.Render(titleInternal.c_str());
 }
 
@@ -86,9 +72,7 @@ void EditorComponent::updateErrorMarkers(std::vector<std::string>& errors){
                 line = std::stoi(match);
             }
             errorMarkers.insert(std::pair<int, std::string>(line, trimmedStr));
-
         }
-        std::cout << filter<<" "<<to_id(shaderType)<<trimmedStr<<std::endl;
     }
     textEditor.SetErrorMarkers(errorMarkers);
 }

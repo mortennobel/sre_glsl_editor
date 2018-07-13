@@ -8,6 +8,7 @@ class EditorComponent {
 public:
     explicit EditorComponent(GLSLEditor* glslEditor, sre::ShaderType shaderType);
     void gui();
+    void setText(std::string& code);
     void update(float deltaTime);
     void updateErrorMarkers(std::vector<std::string>& errors);
 private:

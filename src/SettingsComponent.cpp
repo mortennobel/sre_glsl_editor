@@ -55,13 +55,17 @@ void SettingsComponent::gui() {
 
     }
     if (ImGui::CollapsingHeader("Camera")){
-        ImGui::ColorEdit4("Clear color", &(editor->settings.clearColor.x));
+        const char* clearTypes[3] = {"Color", "Procedural sky", "Skybox"};
+        ImGui::Combo("Clear type", (int*)&(editor->settings.clearType), clearTypes, 3);
+        if (editor->settings.clearType == Clear::Color){
+            ImGui::ColorEdit4("Clear color", &(editor->settings.clearColor.x));
+        }
         char* cameraToolTip[2] = {"Orthographic", "Perspective"};
         int frame_padding = 2;
         for (int i=0;i<cameraIcons.size();i++) {
             auto icon = cameraIcons[i];
             ImGui::PushID(i);
-            bool selected = i == editor->settings.perspectiveCamera;
+            bool selected = (bool)i == editor->settings.perspectiveCamera;
             if (!selected) {
                 ImGui::PushStyleColor(ImGuiCol_Button, (ImVec4) ImColor(200, 200, 200, 255));
             } else {
@@ -69,7 +73,7 @@ void SettingsComponent::gui() {
             }
             if (ImGui::ImageButton(icon->getNativeTexturePtr(), ImVec2(16, 16), ImVec2(0, 1), ImVec2(1.0f, 0),
                                    frame_padding, ImColor(0, 0, 0, 0))) {
-                editor->settings.perspectiveCamera = i;
+                editor->settings.perspectiveCamera = (bool)i;
             }
             if (ImGui::IsItemHovered())
             {
