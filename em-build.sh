@@ -42,5 +42,5 @@ emcc -Isrc -ISimpleRenderEngine/include -ISimpleRenderEngine/submodules/imgui -I
                src/GLSLEditor.cpp \
                src/main.cpp \
                src/SettingsComponent.cpp \
-               -O2 -s ASSERTIONS=1 -std=c++14 -s USE_WEBGL2=1 -s FORCE_FILESYSTEM=1 -s TOTAL_MEMORY=67108864 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file resources -s USE_SDL=2 -o html/GLSL_Editor.html
+               -O2 -s ASSERTIONS=1 -std=c++14 -s USE_WEBGL2=1 -s FORCE_FILESYSTEM=1 -s TOTAL_MEMORY=67108864 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file imgui.ini --preload-file resources -s USE_SDL=2 -o html/GLSL_Editor.html
                #-O3 -g4 -s ASSERTIONS=1 -std=c++14 -s USE_WEBGL2=1 -s FORCE_FILESYSTEM=1 -s TOTAL_MEMORY=67108864 -s USE_SDL_IMAGE=2 -s SDL2_IMAGE_FORMATS='["png"]' --preload-file test_data -s USE_SDL=2 -o html/$FILENAME.html
