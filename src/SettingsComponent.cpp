@@ -60,7 +60,7 @@ void SettingsComponent::gui() {
         if (editor->settings.clearType == Clear::Color){
             ImGui::ColorEdit4("Clear color", &(editor->settings.clearColor.x));
         }
-        char* cameraToolTip[2] = {"Orthographic", "Perspective"};
+        const char* cameraToolTip[2] = {("Orthographic"), "Perspective"};
         int frame_padding = 2;
         for (int i=0;i<cameraIcons.size();i++) {
             auto icon = cameraIcons[i];
