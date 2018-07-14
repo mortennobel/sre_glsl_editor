@@ -4,3 +4,6 @@
 [submodule "submodules/imguiDock"]
 	path = submodules/imguiDock
 	url = https://github.com/pplux/imguiDock.git
+[submodule "submodules/tinyfd"]
+	path = submodules/tinyfd
+	url = http://git.code.sf.net/p/tinyfiledialogs/code

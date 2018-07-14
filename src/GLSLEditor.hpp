@@ -27,6 +27,11 @@ private:
     void init();
     void render();
     void gui();
+    void guiMenu();
+    void newProject();
+    void loadProject();
+    void saveProject();
+    void saveAsProject();
     void update(float deltaTime);
 
     float timeSinceStartup = 0;

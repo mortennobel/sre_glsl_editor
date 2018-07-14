@@ -12,6 +12,8 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "imgui_dock.h"
 
+#include "tinyfiledialogs.h"
+
 using namespace sre;
 
 GLSLEditor::GLSLEditor()
@@ -38,6 +40,36 @@ GLSLEditor::GLSLEditor()
     r.startEventLoop();
 }
 
+void GLSLEditor::newProject(){
+
+}
+
+void GLSLEditor::loadProject(){
+    const char* filePattern = "*.shader";
+    tinyfd_openFileDialog(
+            "Open glsl project", /* NULL or "" */
+            "", /* NULL or "" */
+            1 , /* 0 */
+            &filePattern, /* NULL | {"*.jpg","*.png"} */
+            "Shader project",
+            false); /* NULL | "text files" */
+}
+
+void GLSLEditor::saveProject(){
+    const char* filePattern = "*.shader";
+    tinyfd_saveFileDialog(
+            "Open glsl project", /* NULL or "" */
+            "", /* NULL or "" */
+            1 , /* 0 */
+            &filePattern, /* NULL | {"*.jpg","*.png"} */
+            "Shader project"); /* NULL | "text files" */
+}
+
+void GLSLEditor::saveAsProject(){
+
+}
+
+
 void GLSLEditor::render() {
     renderScene();
 
@@ -50,9 +82,67 @@ void GLSLEditor::render() {
     gui();
 }
 
+void GLSLEditor::guiMenu(){
+    if (ImGui::BeginMainMenuBar())
+    {
+        if (ImGui::BeginMenu("File"))
+        {
+            if (ImGui::MenuItem("New")){
+                newProject();
+            }
+            if (ImGui::MenuItem("Load")){
+                loadProject();
+            }
+            if (ImGui::MenuItem("Save")){
+                saveProject();
+            }
+            if (ImGui::MenuItem("Save as ...")){
+                saveAsProject();
+            }
+            ImGui::Separator();
+            if (ImGui::BeginMenu("Vertex shader")){
+                if (ImGui::MenuItem("New")){
+
+                }
+                if (ImGui::MenuItem("Import")){
+
+                }
+
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Fragment shader")){
+                if (ImGui::MenuItem("New")){
+
+                }
+                if (ImGui::MenuItem("Import")){
+
+                }
+
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Geometry shader")){
+                if (ImGui::MenuItem("New")){
+
+                }
+                if (ImGui::MenuItem("Import")){
+
+                }
+                if (ImGui::MenuItem("Close")){
+
+                }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenu();
+        }
+        ImGui::EndMainMenuBar();
+    }
+    ImGui::Spacing();
+}
+
 void GLSLEditor::gui(){
+    guiMenu();
     auto size = Renderer::instance->getWindowSize();
-    ImGui::SetNextWindowPos(ImVec2(.0f, .0f), ImGuiSetCond_Always);
+    ImGui::SetNextWindowPos(ImVec2(.0f, 20.0f), ImGuiSetCond_Always);
     ImGui::SetNextWindowSize(ImVec2(size.x+2, size.y+2), ImGuiSetCond_Always);
     bool open = true;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
@@ -63,8 +153,6 @@ void GLSLEditor::gui(){
                                         ImGuiWindowFlags_NoTitleBar
     ))
     {
-
-
         // dock layout by hard-coded or .ini file
         ImGui::BeginDockspace();
 
