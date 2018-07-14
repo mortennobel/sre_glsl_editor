@@ -232,8 +232,10 @@ void GLSLEditor::compileShader(){
 
     for (auto elem : filenames){
         auto filename = elem.second;
-        Resource::set(filename, (&vertexShaderComponent)[(int)elem.first].textEditor.GetText());
-        builder.withSourceResource(filename, elem.first);
+        if (filename.length() > 0){
+            Resource::set(filename, (&vertexShaderComponent)[(int)elem.first].textEditor.GetText());
+            builder.withSourceResource(filename, elem.first);
+        }
     }
     errors.clear();
     builder.build(errors);
@@ -255,6 +257,17 @@ void GLSLEditor::showErrors(){
 }
 
 void GLSLEditor::onKey(SDL_Event& key){
+    switch (key.key.keysym.sym){
+        case SDLK_HOME:
+        case SDLK_PAGEUP:
+        case SDLK_END:
+        case SDLK_PAGEDOWN:
+        case SDLK_RIGHT:
+        case SDLK_LEFT:
+        case SDLK_DOWN:
+        case SDLK_UP:
+            return;
+    }
     lastKeypress = timeSinceStartup;
 }
 
