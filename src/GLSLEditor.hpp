@@ -40,6 +40,10 @@ private:
     void rebuildFBO(int width, int height);
     void showErrors();
 
+    bool mousePressed = false;
+    glm::ivec2 mousePos = glm::ivec2(0, 0);
+    glm::ivec2 mouseDelta = glm::ivec2(0, 0);
+
     sre::Camera camera;
     sre::WorldLights worldLights;
     std::vector<std::shared_ptr<sre::Mesh>> meshes;

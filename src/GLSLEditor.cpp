@@ -36,6 +36,19 @@ GLSLEditor::GLSLEditor()
     r.keyEvent = [&](SDL_Event& key){
         onKey(key);
     };
+    r.mouseEvent = [&](SDL_Event& mouse){
+        if (mouse.type == SDL_MOUSEMOTION){
+            mousePos = {mouse.motion.x,mouse.motion.y};
+            mouseDelta = {mouse.motion.xrel,mouse.motion.yrel};
+        }
+        if (mouse.type == SDL_MOUSEBUTTONDOWN || mouse.type == SDL_MOUSEBUTTONUP){
+            if (mouse.button.button == SDL_BUTTON_LEFT){
+                mousePressed = mouse.button.state == SDL_PRESSED;
+                mousePos = {mouse.button.x,mouse.button.y};
+                mouseDelta = {0,0};
+            }
+        }
+    };
     init();
     r.startEventLoop();
 }
@@ -80,6 +93,7 @@ void GLSLEditor::render() {
             .build();
 
     gui();
+    mouseDelta = {0,0};
 }
 
 void GLSLEditor::guiMenu(){
@@ -136,7 +150,6 @@ void GLSLEditor::guiMenu(){
         }
         ImGui::EndMainMenuBar();
     }
-    ImGui::Spacing();
 }
 
 void GLSLEditor::gui(){
@@ -194,6 +207,10 @@ void GLSLEditor::gui(){
                 rebuildFBO(size.x, size.y);
             }
             ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y}, {0,1}, {1,0});
+            if (ImGui::IsItemHoveredRect() && mousePressed){
+                settings.rotateCamera -= glm::ivec2{mouseDelta.y,mouseDelta.x};
+                settings.rotateCamera.x = glm::clamp(settings.rotateCamera.x,-89.0f,89.0f);
+            }
         }
         ImGui::EndDock();
 
