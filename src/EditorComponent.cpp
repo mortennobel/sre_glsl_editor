@@ -4,10 +4,11 @@
 
 using namespace sre;
 
-EditorComponent::EditorComponent(GLSLEditor *glslEditor, sre::ShaderType shaderType)
+EditorComponent::EditorComponent(GLSLEditor *glslEditor, sre::ShaderType shaderType, std::string& code)
 :glslEditor(glslEditor), shaderType(shaderType)
 {
     titleInternal = std::string("##editor")+std::to_string((int)shaderType);
+    setText(code);
 }
 
 void EditorComponent::setText(std::string& code){

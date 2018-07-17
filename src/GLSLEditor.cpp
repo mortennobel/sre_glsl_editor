@@ -16,11 +16,27 @@
 
 using namespace sre;
 
+namespace {
+    const char* to_string(ShaderType shaderType){
+        switch (shaderType){
+            case ShaderType::Geometry:
+                return "Geometry Shader";
+            case ShaderType::Fragment:
+                return "Fragment Shader";
+            case ShaderType::Vertex:
+                return "Vertex Shader";
+            case ShaderType::TessellationControl:
+                return "Tess Ctrl Shader";
+            case ShaderType::TessellationEvaluation:
+                return "Tess Eval Shader";
+            default:
+                "Unknown";
+        }
+    }
+}
+
 GLSLEditor::GLSLEditor()
-        :vertexShaderComponent(this, sre::ShaderType::Vertex),
-         geometryShaderComponent(this, sre::ShaderType::Geometry),
-         fragmentShaderComponent(this, sre::ShaderType::Fragment),
-         settingsComponent(this),
+        :settingsComponent(this),
          uniformComponent(this)
 {
     SDLRenderer r;
@@ -54,32 +70,64 @@ GLSLEditor::GLSLEditor()
 }
 
 void GLSLEditor::newProject(){
-
+    Settings settings;
+    settings.filenames[ShaderType::Vertex] = "standard_blinn_phong_vert.glsl";
+    settings.filenames[ShaderType::Fragment] = "standard_blinn_phong_frag.glsl";
+    settings.shaderSource[ShaderType::Geometry] = "";
+    setProject(settings);
 }
 
 void GLSLEditor::loadProject(){
     const char* filePattern = "*.shader";
-    tinyfd_openFileDialog(
+    auto filePath = tinyfd_openFileDialog(
             "Open glsl project", /* NULL or "" */
             "", /* NULL or "" */
             1 , /* 0 */
             &filePattern, /* NULL | {"*.jpg","*.png"} */
             "Shader project",
             false); /* NULL | "text files" */
+    auto newSettings = Settings::load(filePath);
+    setProject(newSettings);
 }
 
 void GLSLEditor::saveProject(){
+    if (settings.filepath.length() == 0){
+        saveAsProject();
+        return;
+    }
+    this->settings.save(settings.filepath);
+}
+
+void GLSLEditor::setProject(Settings& settings){
+    this->settings = settings;
+
+    editorComponents.clear();
+    auto shaderBuilder = Shader::create();
+    for (auto typeName : settings.filenames){
+        auto shaderType = typeName.first;
+        auto shaderSource = Resource::loadText(typeName.second);
+        settings.shaderSource[shaderType] = shaderSource;
+
+        editorComponents.emplace(std::pair<sre::ShaderType, std::shared_ptr<EditorComponent>>{shaderType, std::make_shared<EditorComponent>(this, shaderType, shaderSource)});
+        shaderBuilder.withSourceResource(typeName.second, shaderType);
+    }
+
+    shader = shaderBuilder.build();
+    this->settings.material = shader->createMaterial();
+}
+
+void GLSLEditor::saveAsProject(){
     const char* filePattern = "*.shader";
-    tinyfd_saveFileDialog(
+    auto filepath = tinyfd_saveFileDialog(
             "Open glsl project", /* NULL or "" */
             "", /* NULL or "" */
             1 , /* 0 */
             &filePattern, /* NULL | {"*.jpg","*.png"} */
             "Shader project"); /* NULL | "text files" */
-}
-
-void GLSLEditor::saveAsProject(){
-
+    if (filepath != nullptr && strlen(filepath) > 0){
+        settings.filepath = filepath;
+        saveProject();
+    }
 }
 
 
@@ -169,30 +217,13 @@ void GLSLEditor::gui(){
         // dock layout by hard-coded or .ini file
         ImGui::BeginDockspace();
 
-        for (auto elem : filenames){
-            switch (elem.first){
-                case ShaderType::Vertex:
-                    if(ImGui::BeginDock("Vertex Shader")){
-                        vertexShaderComponent.gui();
-                    }
-                    ImGui::EndDock();
-                    ImGui::SetNextDock( "Vertex Shader", ImGuiDockSlot::ImGuiDockSlot_None );
-                    break;
-                case ShaderType::Fragment:
-                    if(ImGui::BeginDock("Fragment Shader")){
-                        fragmentShaderComponent.gui();
-                    }
-                    ImGui::EndDock();
-                    ImGui::SetNextDock( "Fragment Shader", ImGuiDockSlot::ImGuiDockSlot_None );
-                    break;
-                case ShaderType::Geometry:
-                    if(ImGui::BeginDock("Geometry Shader")){
-                        geometryShaderComponent.gui();
-                    }
-                    ImGui::EndDock();
-                    ImGui::SetNextDock( "Geometry Shader", ImGuiDockSlot::ImGuiDockSlot_None );
-                    break;
+        for (auto elem : settings.filenames){
+            auto shaderName = to_string(elem.first);
+            if(ImGui::BeginDock(shaderName)){
+                editorComponents[ShaderType::Vertex]->gui();
             }
+            ImGui::EndDock();
+            ImGui::SetNextDock( shaderName, ImGuiDockSlot::ImGuiDockSlot_None );
         }
 
         if(ImGui::BeginDock("Errors")){
@@ -311,20 +342,7 @@ void GLSLEditor::init() {
                                  .withDirectionalLight(glm::normalize(glm::vec3(1,1,1)))
                                  .build());
 
-    settings.shaderSource[ShaderType::Vertex] = Resource::loadText("standard_blinn_phong_vert.glsl");
-    settings.shaderSource[ShaderType::Fragment] = Resource::loadText("standard_blinn_phong_frag.glsl");
-    settings.shaderSource[ShaderType::Geometry] = "";
-
-    filenames[ShaderType::Vertex] = "standard_blinn_phong_vert.glsl";
-    filenames[ShaderType::Fragment] = "standard_blinn_phong_frag.glsl";
-
-    vertexShaderComponent.setText(settings.shaderSource[ShaderType::Vertex]);
-    fragmentShaderComponent.setText(settings.shaderSource[ShaderType::Fragment]);
-
-    shader = Shader::getStandardBlinnPhong();
-    settings.material = shader->createMaterial();
-    settings.material->setColor({1,1,1,1});
-    settings.material->setSpecularity(Color(1,1,1,50));
+    newProject();
 
     rebuildFBO(200, 100);
 
@@ -335,19 +353,20 @@ void GLSLEditor::init() {
 void GLSLEditor::compileShader(){
     auto builder = shader->update();
 
-    for (auto elem : filenames){
+    for (auto elem : settings.filenames){
         auto filename = elem.second;
         if (filename.length() > 0){
-            Resource::set(filename, (&vertexShaderComponent)[(int)elem.first].textEditor.GetText());
+
+            Resource::set(filename, editorComponents[elem.first]->textEditor.GetText());
             builder.withSourceResource(filename, elem.first);
         }
     }
     errors.clear();
     builder.build(errors);
 
-    vertexShaderComponent.updateErrorMarkers(errors);
-    fragmentShaderComponent.updateErrorMarkers(errors);
-    geometryShaderComponent.updateErrorMarkers(errors);
+    for (auto &e : editorComponents){
+        e.second->updateErrorMarkers(errors);
+    }
 }
 
 void GLSLEditor::showErrors(){

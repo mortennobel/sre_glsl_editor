@@ -6,7 +6,7 @@ class GLSLEditor;
 
 class EditorComponent {
 public:
-    explicit EditorComponent(GLSLEditor* glslEditor, sre::ShaderType shaderType);
+    EditorComponent(GLSLEditor* glslEditor, sre::ShaderType shaderType, std::string& code);
     void gui();
     void setText(std::string& code);
     void update(float deltaTime);

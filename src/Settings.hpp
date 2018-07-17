@@ -23,6 +23,7 @@ enum class Clear {
 };
 
 struct Settings {
+    std::string filepath;
     int selectedMesh = 0;
     bool perspectiveCamera = true;
     glm::vec2 rotateCamera = glm::vec2{0.0};
@@ -32,4 +33,8 @@ struct Settings {
     std::map<std::string, UniformTypeValue> uniforms;
     std::map<sre::ShaderType, std::string> shaderSource;
     std::shared_ptr<sre::Material> material;
+    std::map<sre::ShaderType, std::string> filenames;
+
+    static Settings load(std::string filepath);
+    void save(std::string filepath);
 };

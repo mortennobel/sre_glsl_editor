@@ -32,6 +32,7 @@ private:
     void loadProject();
     void saveProject();
     void saveAsProject();
+    void setProject(Settings& settings);
     void update(float deltaTime);
 
     float timeSinceStartup = 0;
@@ -53,9 +54,7 @@ private:
 
     std::shared_ptr<sre::Texture> sceneTexture;
     std::shared_ptr<sre::Framebuffer> framebufferObject;
-    EditorComponent vertexShaderComponent;
-    EditorComponent fragmentShaderComponent;
-    EditorComponent geometryShaderComponent;
+    std::map<sre::ShaderType, std::shared_ptr<EditorComponent>> editorComponents;
     SettingsComponent settingsComponent;
     UniformComponent uniformComponent;
     Settings settings;
@@ -63,7 +62,6 @@ private:
     glm::mat4 pos1 = glm::translate(glm::mat4(1), {0,0,0});
 
     std::vector<std::string> errors;
-    std::map<sre::ShaderType, std::string> filenames;
 
     friend class EditorComponent;
     friend class SettingsComponent;
