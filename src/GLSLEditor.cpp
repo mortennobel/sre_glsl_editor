@@ -220,7 +220,7 @@ void GLSLEditor::gui(){
         for (auto elem : settings.filenames){
             auto shaderName = to_string(elem.first);
             if(ImGui::BeginDock(shaderName)){
-                editorComponents[ShaderType::Vertex]->gui();
+                editorComponents[elem.first]->gui();
             }
             ImGui::EndDock();
             ImGui::SetNextDock( shaderName, ImGuiDockSlot::ImGuiDockSlot_None );
