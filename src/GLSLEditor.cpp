@@ -12,7 +12,9 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "imgui_dock.h"
 
+#ifndef EMSCRIPTEN
 #include "tinyfiledialogs.h"
+#endif
 
 using namespace sre;
 
@@ -78,6 +80,7 @@ void GLSLEditor::newProject(){
 }
 
 void GLSLEditor::loadProject(){
+#ifndef EMSCRIPTEN
     const char* filePattern = "*.shader";
     auto filePath = tinyfd_openFileDialog(
             "Open glsl project", /* NULL or "" */
@@ -88,14 +91,17 @@ void GLSLEditor::loadProject(){
             false); /* NULL | "text files" */
     auto newSettings = Settings::load(filePath);
     setProject(newSettings);
+#endif
 }
 
 void GLSLEditor::saveProject(){
+#ifndef EMSCRIPTEN
     if (settings.filepath.length() == 0){
         saveAsProject();
         return;
     }
     this->settings.save(settings.filepath);
+#endif
 }
 
 void GLSLEditor::setProject(Settings& settings){
@@ -117,6 +123,7 @@ void GLSLEditor::setProject(Settings& settings){
 }
 
 void GLSLEditor::saveAsProject(){
+#ifndef EMSCRIPTEN
     const char* filePattern = "*.shader";
     auto filepath = tinyfd_saveFileDialog(
             "Open glsl project", /* NULL or "" */
@@ -128,6 +135,7 @@ void GLSLEditor::saveAsProject(){
         settings.filepath = filepath;
         saveProject();
     }
+#endif
 }
 
 
@@ -234,13 +242,15 @@ void GLSLEditor::gui(){
 
         if(ImGui::BeginDock("Scene")){
             ImVec2 size = ImGui::GetContentRegionAvail();
-            if (size.x != sceneTexture->getWidth() || size.y != sceneTexture->getHeight()){
-                rebuildFBO(size.x, size.y);
-            }
-            ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y}, {0,1}, {1,0});
-            if (ImGui::IsItemHoveredRect() && mousePressed){
-                settings.rotateCamera -= glm::ivec2{mouseDelta.y,mouseDelta.x};
-                settings.rotateCamera.x = glm::clamp(settings.rotateCamera.x,-89.0f,89.0f);
+            if (size.x >0 && size.y > 0){
+                if (size.x != sceneTexture->getWidth() || size.y != sceneTexture->getHeight()){
+                    rebuildFBO(size.x, size.y);
+                }
+                ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y}, {0,1}, {1,0});
+                if (ImGui::IsItemHoveredRect() && mousePressed){
+                    settings.rotateCamera -= glm::ivec2{mouseDelta.y,mouseDelta.x};
+                    settings.rotateCamera.x = glm::clamp(settings.rotateCamera.x,-89.0f,89.0f);
+                }
             }
         }
         ImGui::EndDock();
@@ -262,7 +272,6 @@ void GLSLEditor::gui(){
 }
 
 void GLSLEditor::rebuildFBO(int width, int height){
-
     sceneTexture = Texture::create()
             .withRGBAData(nullptr, width, height)
             .withFilterSampling(false)
@@ -284,7 +293,6 @@ void GLSLEditor::renderScene(){
     } else {
         camera.setOrthographicProjection(1,0,100);
     }
-
 
     sre::Color color(settings.clearColor);
     auto rp =  RenderPass::create()
