@@ -12,6 +12,8 @@
 #include "glm/gtx/rotate_vector.hpp"
 #include "imgui_dock.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wformat-security"
 #ifndef EMSCRIPTEN
 #include "tinyfiledialogs.h"
 #endif
@@ -32,7 +34,7 @@ namespace {
             case ShaderType::TessellationEvaluation:
                 return "Tess Eval Shader";
             default:
-                "Unknown";
+                return "Unknown";
         }
     }
 }
@@ -241,12 +243,12 @@ void GLSLEditor::gui(){
         ImGui::SetNextDock( "Errors", ImGuiDockSlot::ImGuiDockSlot_Bottom );
 
         if(ImGui::BeginDock("Scene")){
-            ImVec2 size = ImGui::GetContentRegionAvail();
-            if (size.x >0 && size.y > 0){
-                if (size.x != sceneTexture->getWidth() || size.y != sceneTexture->getHeight()){
-                    rebuildFBO(size.x, size.y);
+            ImVec2 contentSize = ImGui::GetContentRegionAvail();
+            if (contentSize.x >0 && contentSize.y > 0){
+                if (contentSize.x != sceneTexture->getWidth() || contentSize.y != sceneTexture->getHeight()){
+                    rebuildFBO((int)contentSize.x, (int)contentSize.y);
                 }
-                ImGui_RenderTexture(sceneTexture.get(), {size.x,size.y}, {0,1}, {1,0});
+                ImGui_RenderTexture(sceneTexture.get(), {contentSize.x,contentSize.y}, {0,1}, {1,0});
                 if (ImGui::IsItemHoveredRect() && mousePressed){
                     settings.rotateCamera -= glm::ivec2{mouseDelta.y,mouseDelta.x};
                     settings.rotateCamera.x = glm::clamp(settings.rotateCamera.x,-89.0f,89.0f);
@@ -405,8 +407,10 @@ void GLSLEditor::onKey(SDL_Event& key){
 
 void GLSLEditor::update(float deltaTime){
     timeSinceStartup += deltaTime;
-    if (lastKeypress && timeSinceStartup - lastKeypress > 0.2f){
+    if (lastKeypress > 0 && timeSinceStartup - lastKeypress > 0.2f){
         compileShader();
         lastKeypress = 0;
     }
 }
+
+#pragma clang diagnostic pop

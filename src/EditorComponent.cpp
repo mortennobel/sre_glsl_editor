@@ -57,7 +57,7 @@ void EditorComponent::updateErrorMarkers(std::vector<std::string>& errors){
 
     std::smatch m;
 
-    for (auto err : errors){
+    for (auto & err : errors){
         auto trimmedStr = err;
         auto idx = err.find("##");
         int filter = -1;
