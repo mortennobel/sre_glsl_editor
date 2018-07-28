@@ -19,16 +19,21 @@
 
 
 class GLSLEditor {
+    int versionMajor = 0;
+    int versionMinor = 1;
 public:
     GLSLEditor();
     void compileShader();
     void renderScene();
 private:
+    std::string versionString;
+    std::string prefPath;
     void init();
     void render();
     void gui();
     void guiMenu();
     void newProject();
+    void revertFromDisk();
     void loadProject();
     void saveProject();
     void saveAsProject();

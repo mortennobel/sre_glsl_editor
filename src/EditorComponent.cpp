@@ -64,7 +64,11 @@ void EditorComponent::updateErrorMarkers(std::vector<std::string>& errors){
         if (idx > 0){
             trimmedStr = err.substr(0,idx);
             auto filterStr = err.substr(idx+2);
-            filter = std::stoi(filterStr);
+            try{
+                filter = std::stoi(filterStr);
+            } catch (...){
+                filter = -1;
+            }
         }
         if (filter == to_id(shaderType)) {
             int line = 0;

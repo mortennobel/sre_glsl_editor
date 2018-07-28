@@ -199,11 +199,12 @@ void Settings::parseUniform(picojson::value val, sre::Material* mat, GLSLEditor 
 }
 
 std::map<sre::ShaderType, std::string> parseFileNames(value v, std::string path){
+    sre::Resource::reset();
     std::map<sre::ShaderType, std::string> res;
     for (auto attribute : v.get<array>()){
         sre::ShaderType type = (sre::ShaderType)attribute.get("type").get<int64_t>();
-        std::string value = attribute.get("value").get<std::string>();
-        res[type] = path + value;
+        std::string value = path + attribute.get("value").get<std::string>();
+        res[type] = value;
     }
     return res;
 }

@@ -4,6 +4,7 @@
 
 #include "GLSLEditor.hpp"
 #include <vector>
+#include <fstream>
 #include <sre/Color.hpp>
 #include <sre/Resource.hpp>
 #include <sre/imgui_sre.hpp>
@@ -21,6 +22,20 @@
 using namespace sre;
 
 namespace {
+
+    void copyFile(const char * source, const char * dest)
+    {
+        std::ifstream  src(source, std::ios::binary);
+        std::ofstream  dst(dest,   std::ios::binary);
+
+        dst << src.rdbuf();
+    }
+    bool isFileExist(const char *fileName)
+    {
+        std::ifstream infile(fileName);
+        return infile.good();
+    }
+
     bool hasEnding (std::string const &fullString, std::string const &ending) {
         if (fullString.length() >= ending.length()) {
             return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
@@ -51,9 +66,20 @@ GLSLEditor::GLSLEditor()
         :settingsComponent(this),
          uniformComponent(this)
 {
+#ifndef EMSCRIPTEN
+    prefPath = SDL_GetPrefPath("SimpleRenderEngine","GLSLEditor");
+    static auto iniFilename = prefPath+"imgui.ini";
+    if (!isFileExist(iniFilename.c_str()) ){
+        copyFile("resources/imgui.ini", iniFilename.c_str());
+    }
+#endif
+    versionString = std::to_string(versionMajor)+"."+std::to_string(versionMinor);
     SDLRenderer r;
-    r.setWindowTitle("GLSL Editor");
+    r.setWindowTitle(std::string("GLSL Editor ")+versionString);
     r.init();
+#ifndef EMSCRIPTEN
+    ImGui::GetIO().IniFilename = iniFilename.c_str();
+#endif
     settingsComponent.init();
     r.frameUpdate = [&](float deltaTime){
         update(deltaTime);
@@ -186,6 +212,9 @@ void GLSLEditor::guiMenu(){
             }
             if (ImGui::MenuItem("Save as ...")){
                 saveAsProject();
+            }
+            if (ImGui::MenuItem("Revert from disk")){
+                Settings::load(settings.filepath, this);
             }
             /* ImGui::Separator();
             if (ImGui::BeginMenu("Vertex shader")){

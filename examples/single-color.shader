@@ -1,0 +1,1 @@
+{"clearColor":[0,0,0,1],"clearType":0,"filenames":[{"type":0,"value":"single-color.shader.vert.glsl"},{"type":1,"value":"single-color.shader.frag.glsl"}],"perspectiveCamera":true,"rotateCamera":[-17,25],"selectedMesh":3,"uniforms":{}}

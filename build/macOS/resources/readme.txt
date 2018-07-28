@@ -1,0 +1,1 @@
+Utah teapot scaled version of https://graphics.cs.utah.edu/courses/cs6620/fall2013/?prj=5
