@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "GLSLEditor.hpp"
 #include "glm/gtc/type_ptr.hpp"
+#include "Settings.hpp"
 
 using namespace std;
 using namespace sre;
@@ -75,16 +76,6 @@ void UniformComponent::gui() {
         ImGui::PushID(uniform.id);
         ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Appearing);
 
-        auto uniformIter = editor->settings.uniforms.find(name);
-        UniformTypeValue* value;
-        if (uniformIter == editor->settings.uniforms.end()){
-            editor->settings.uniforms[name] = {};
-            value = &(editor->settings.uniforms[name]);
-            value->uniformType = uniform.type;
-        } else {
-            value = &(uniformIter->second);
-
-        }
         auto material = editor->settings.material;
         switch (uniform.type){
             case UniformType::Float: {

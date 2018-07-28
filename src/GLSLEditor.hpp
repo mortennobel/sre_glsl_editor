@@ -33,6 +33,7 @@ private:
     void saveProject();
     void saveAsProject();
     void setProject(Settings& settings);
+    void setShader(Settings& settings);
     void update(float deltaTime);
 
     float timeSinceStartup = 0;
@@ -65,6 +66,7 @@ private:
 
     friend class EditorComponent;
     friend class SettingsComponent;
+    friend class Settings;
     friend class UniformComponent;
 };
 

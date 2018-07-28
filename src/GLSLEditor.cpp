@@ -21,6 +21,14 @@
 using namespace sre;
 
 namespace {
+    bool hasEnding (std::string const &fullString, std::string const &ending) {
+        if (fullString.length() >= ending.length()) {
+            return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+        } else {
+            return false;
+        }
+    }
+
     const char* to_string(ShaderType shaderType){
         switch (shaderType){
             case ShaderType::Geometry:
@@ -78,6 +86,7 @@ void GLSLEditor::newProject(){
     settings.filenames[ShaderType::Vertex] = "standard_blinn_phong_vert.glsl";
     settings.filenames[ShaderType::Fragment] = "standard_blinn_phong_frag.glsl";
     settings.shaderSource[ShaderType::Geometry] = "";
+    settings.editor = this;
     setProject(settings);
 }
 
@@ -91,8 +100,7 @@ void GLSLEditor::loadProject(){
             &filePattern, /* NULL | {"*.jpg","*.png"} */
             "Shader project",
             false); /* NULL | "text files" */
-    auto newSettings = Settings::load(filePath);
-    setProject(newSettings);
+    settings = Settings::load(filePath, this);
 #endif
 }
 
@@ -106,9 +114,7 @@ void GLSLEditor::saveProject(){
 #endif
 }
 
-void GLSLEditor::setProject(Settings& settings){
-    this->settings = settings;
-
+void GLSLEditor::setShader(Settings& settings){
     editorComponents.clear();
     auto shaderBuilder = Shader::create();
     for (auto typeName : settings.filenames){
@@ -124,17 +130,27 @@ void GLSLEditor::setProject(Settings& settings){
     this->settings.material = shader->createMaterial();
 }
 
+void GLSLEditor::setProject(Settings& settings){
+    this->settings = settings;
+
+    setShader(settings);
+
+}
+
 void GLSLEditor::saveAsProject(){
 #ifndef EMSCRIPTEN
     const char* filePattern = "*.shader";
     auto filepath = tinyfd_saveFileDialog(
-            "Open glsl project", /* NULL or "" */
-            "", /* NULL or "" */
+            "Save glsl project", /* NULL or "" */
+            "some.shader", /* NULL or "" */
             1 , /* 0 */
             &filePattern, /* NULL | {"*.jpg","*.png"} */
             "Shader project"); /* NULL | "text files" */
     if (filepath != nullptr && strlen(filepath) > 0){
         settings.filepath = filepath;
+        if (!hasEnding(settings.filepath, ".shader")){
+            settings.filepath += ".shader";
+        }
         saveProject();
     }
 #endif
