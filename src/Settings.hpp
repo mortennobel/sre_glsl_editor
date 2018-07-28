@@ -31,7 +31,7 @@ struct Settings {
     std::string filepath;
     GLSLEditor * editor = nullptr;
 
-    static Settings load(std::string filepath, GLSLEditor * editor);
+    static void load(std::string filepath, GLSLEditor * editor);
     void save(std::string filepath);
 private:
     picojson::value materialUniformToJson();

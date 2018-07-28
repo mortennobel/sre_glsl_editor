@@ -10,6 +10,16 @@
 using namespace picojson;
 
 namespace {
+    std::array<std::string,2> splitPathAndFilename(std::string filepath){
+        int unixSep = (int)filepath.rfind('/');
+        int winSep = (int)filepath.rfind('\\');
+        size_t lastPathSeperator = std::max(unixSep, winSep);
+        auto fileName = filepath.substr(lastPathSeperator + 1);
+        auto path = filepath.substr(0,lastPathSeperator+1);
+        return {path, fileName};
+    }
+
+
     glm::vec2 parseVec2(value val){
         glm::vec2 res;
         auto array = val.get<picojson::array>();
@@ -188,33 +198,37 @@ void Settings::parseUniform(picojson::value val, sre::Material* mat, GLSLEditor 
     }
 }
 
-std::map<sre::ShaderType, std::string> parseFileNames(value v){
+std::map<sre::ShaderType, std::string> parseFileNames(value v, std::string path){
     std::map<sre::ShaderType, std::string> res;
     for (auto attribute : v.get<array>()){
         sre::ShaderType type = (sre::ShaderType)attribute.get("type").get<int64_t>();
         std::string value = attribute.get("value").get<std::string>();
-        res[type] = value;
+        res[type] = path + value;
     }
     return res;
 }
 
-Settings Settings::load(std::string filepath, GLSLEditor * editor){
+void Settings::load(std::string filepath, GLSLEditor * editor){
     picojson::value v;
     std::fstream fis(filepath, std::ios_base::in);
     fis >> v;
     if (std::cin.fail()) {
         std::cerr << picojson::get_last_error() << std::endl;
-        return {};
+        return;
     }
     auto & root = v.get<object>();
-    Settings settings;
+    editor->settings = {};
+    Settings& settings = editor->settings;
     settings.selectedMesh = (int)root["selectedMesh"].get<int64_t>();
     settings.perspectiveCamera = root["perspectiveCamera"].get<bool>();
     settings.rotateCamera = parseVec2(root["rotateCamera"]);
     settings.clearType = (Clear)root["clearType"].get<int64_t>();
     settings.clearColor = parseVec4(root["clearColor"]);
 
-    settings.filenames = parseFileNames(root["filenames"]);
+    auto res = splitPathAndFilename(filepath);
+
+    auto path = res[0];
+    settings.filenames = parseFileNames(root["filenames"], path);
 
     settings.filepath = filepath;
     settings.editor = editor;
@@ -222,9 +236,6 @@ Settings Settings::load(std::string filepath, GLSLEditor * editor){
     editor->setShader(settings);
 
     parseUniform(root["uniforms"], settings.material.get(), editor);
-
-
-    return settings;
 }
 
 void Settings::save(std::string filepath){
@@ -249,12 +260,11 @@ void Settings::save(std::string filepath){
 
 }
 
+
 picojson::value Settings::fileNamesToJSON(std::string filepath) {
-    int unixSep = (int)filepath.rfind('/');
-    int winSep = (int)filepath.rfind('\\');
-    size_t lastPathSeperator = std::max(unixSep, winSep);
-    auto fileName = filepath.substr(lastPathSeperator + 1);
-    auto path = filepath.substr(0,lastPathSeperator+1);
+    auto res = splitPathAndFilename(filepath);
+    auto fileName = res[1];
+    auto path = res[0];
     value v(array_type, true);
     array& a = v.get<array>();
 

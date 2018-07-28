@@ -100,7 +100,7 @@ void GLSLEditor::loadProject(){
             &filePattern, /* NULL | {"*.jpg","*.png"} */
             "Shader project",
             false); /* NULL | "text files" */
-    settings = Settings::load(filePath, this);
+    Settings::load(filePath, this);
 #endif
 }
 
@@ -127,13 +127,13 @@ void GLSLEditor::setShader(Settings& settings){
     }
 
     shader = shaderBuilder.build();
-    this->settings.material = shader->createMaterial();
+    settings.material = shader->createMaterial();
 }
 
 void GLSLEditor::setProject(Settings& settings){
     this->settings = settings;
 
-    setShader(settings);
+    setShader(this->settings);
 
 }
 
@@ -187,7 +187,7 @@ void GLSLEditor::guiMenu(){
             if (ImGui::MenuItem("Save as ...")){
                 saveAsProject();
             }
-            ImGui::Separator();
+            /* ImGui::Separator();
             if (ImGui::BeginMenu("Vertex shader")){
                 if (ImGui::MenuItem("New")){
 
@@ -220,6 +220,7 @@ void GLSLEditor::guiMenu(){
                 }
                 ImGui::EndMenu();
             }
+             */
             ImGui::EndMenu();
         }
         ImGui::EndMainMenuBar();
