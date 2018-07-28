@@ -12,4 +12,6 @@ First fork and clone the library (`git clone --recurse-submodules <url>`).
 An interactive html demo is available. Note that the html demo has some limitation compared to the desktop version 
 (no copy-past and no file access).
 
-[![GLSL Editor](https://mortennobel.github.io/sre_glsl_editor/glsl_editor.png)](https://mortennobel.github.io/sre_glsl_editor/GLSL_Editor.html)
+[![GLSL Editor](https://mortennobel.github.io/sre_glsl_editor/glsl_editor.png)](https://mortennobel.github.io/sre_glsl_editor/index.html)
+
+[Live demo](https://mortennobel.github.io/sre_glsl_editor/index.html)
